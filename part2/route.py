@@ -1,7 +1,7 @@
 #!/bin/python
 
 # put your routing program here!
-#!/usr/bin/env python
+
 import os,sys
 import Queue
 import math
