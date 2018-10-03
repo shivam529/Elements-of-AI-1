@@ -2,10 +2,11 @@
 # solver16.py : Circular 16 Puzzle solver
 # Based on skeleton code by D. Crandall, September 2018
 #
-from Queue import PriorityQueue
+from queue import PriorityQueue
 from random import randrange, sample
 import sys
 import string
+import math
 
 # shift a specified row left (1) or right (-1)
 def shift_row(state, row, dir):
@@ -22,7 +23,7 @@ def shift_col(state, col, dir):
 # pretty-print board state
 def print_board(row):
     for j in range(0, 16, 4):
-        print '%3d %3d %3d %3d' % (row[j:(j+4)])
+        print ('%3d %3d %3d %3d'  %(row[j:(j+4)]))
 
 # return a list of possible successor states
 def successors(state):
@@ -35,16 +36,54 @@ def reverse_move(state):
 # check if we've reached the goal
 def is_goal(state):
     return sorted(state) == list(state)
+
+
+def heuristic(board):
+    h = 0
+    for i in range(16):
+        h += mandist(board, i)
+    return h
     
-# The solver! - using BFS right now
+
+'''
+The following function calculates the Manhattan distance for the heuristic.
+In this, a is the index of the current state of the board and b is the index of the goal state.
+At first, it calculates the value of b as per the goal state. Then, for that b, it calculates the Manhattan distance.
+a_row and b_row are the row values of a and b respectively and a_col and b_col are the column values of a and b respectively.
+Now, while calculating man_dist, it considers the min value of the differnces of rows and columns for satisfying the wrapping
+condition.
+
+'''
+def mandist(board, a):
+    b = 0
+    count = 0
+    while(sorted(board)[b] != board[a]):
+        b += 1
+
+    a_row = a//4
+    a_col = a % 4
+    b_row = b//4
+    b_col = b % 4
+    row_d = abs(a_row-b_row)
+    col_d = abs(a_col-b_col)
+    man_dist = min(row_d, 4-row_d)+min(col_d, 4-col_d)
+    return man_dist
+
+
+
+
+    
+# The solve function uses priority queue and takes calculated heuristic value as the priority.
 def solve(initial_board):
-    fringe = [ (initial_board, "") ]
-    while len(fringe) > 0:
-        (state, route_so_far) = fringe.pop()
+    fringe = PriorityQueue();
+    fringe.put((0,initial_board, ""))
+    while not fringe.empty():
+        (state, route_so_far) = fringe.get()[1:]
         for (succ, move) in successors( state ):
+            h=heuristic(succ)
             if is_goal(succ):
                 return( route_so_far + " " + move )
-            fringe.insert(0, (succ, route_so_far + " " + move ) )
+            fringe.put((h,succ, route_so_far + " " + move ) )
     return False
 
 # test cases
@@ -54,12 +93,12 @@ with open(sys.argv[1], 'r') as file:
         start_state += [ int(i) for i in line.split() ]
 
 if len(start_state) != 16:
-    print "Error: couldn't parse start state file"
+    print ("Error: couldn't parse start state file")
 
-print "Start state: "
+print ("Start state: ")
 print_board(tuple(start_state))
 
-print "Solving..."
+print ("Solving...")
 route = solve(tuple(start_state))
 
-print "Solution found in " + str(len(route)/3) + " moves:" + "\n" + route
+print ("Solution found in " + str(len(route)/3) + " moves:" + "\n" + route)
